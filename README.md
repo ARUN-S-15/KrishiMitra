@@ -37,7 +37,8 @@ Install dependencies (ideally in a virtual environment):
 
 ```powershell
 # In Backend folder
-python -m venv .venv ; venv\Scripts\activate
+python -m venv .venv
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -46,19 +47,6 @@ Environment variables (create a `.env` file in `Backend/`):
 ```
 # Required
 GROQ_API_KEY=your_groq_api_key_here
-
-# Optional (sensible defaults are used if omitted)
-GROQ_MODEL=llama-3.1-8b-instant
-GROQ_TEMPERATURE=0.3
-GROQ_MAX_TOKENS=512
-
-# CORS controls (for development)
-# Allow comma-separated origins (defaults include http://localhost:8080 etc.)
-ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
-# Permit all origins (dev only)
-# ALLOW_ALL_ORIGINS=true
-# Or use regex (example): ^https?://localhost:\\d+$
-# ALLOW_ORIGIN_REGEX=^https?://localhost:\\d+$
 ```
 
 Run the backend:
@@ -81,22 +69,6 @@ Install dependencies:
 ```powershell
 # In Frontend folder
 npm install
-```
-
-Environment variables:
-
-- For development, the Vite dev server proxies `/api` to the backend at `http://127.0.0.1:8000`. No `.env` is required.
-- To override the backend URL for the proxy:
-
-Create `Frontend/.env` (optional):
-```
-# Only if your backend runs on a non-default URL/port
-VITE_BACKEND_URL=http://127.0.0.1:8000
-```
-
-- To bypass the proxy and call backend directly (e.g., production/staging), set:
-```
-VITE_API_BASE_URL=https://your-backend.example.com
 ```
 
 Run the frontend:
