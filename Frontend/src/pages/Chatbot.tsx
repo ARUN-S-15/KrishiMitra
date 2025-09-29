@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -25,6 +27,23 @@ const Chatbot = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  // Prefer '/api' proxy in dev; allow override via VITE_API_BASE_URL for direct calls
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
+  // Light formatter: ensures headings and list markers render well if Groq returns plain text
+  const normalizeToMarkdown = (text: string): string => {
+    let t = text.trim();
+    // Replace bold-like markers if model uses **text** already (keep as is)
+    // Ensure there are blank lines before headings-like segments
+    t = t.replace(/\n?\s*([A-Za-z].*?:)\s*\n/g, '\n\n**$1**\n');
+    // Ensure list items start on new lines
+    t = t.replace(/\s*(\d+)\)\s+/g, '\n$1. '); // handle 1) -> 1.
+    t = t.replace(/\s*(\d+)\.\s+/g, '\n$1. ');
+    t = t.replace(/\s*[-•]\s+/g, '\n- ');
+    // Collapse excessive blank lines
+    t = t.replace(/\n{3,}/g, '\n\n');
+    return t;
+  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -40,45 +59,47 @@ const Chatbot = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
-
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const reply = await generateBotResponse(inputMessage);
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: generateBotResponse(inputMessage),
+        content: reply,
         sender: 'bot',
         timestamp: new Date(),
         type: 'text'
       };
       setMessages(prev => [...prev, botResponse]);
+    } catch (err) {
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: 'Sorry, I could not reach the assistant right now. Please try again in a moment.',
+        sender: 'bot',
+        timestamp: new Date(),
+        type: 'text'
+      };
+      setMessages(prev => [...prev, botResponse]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
-  const generateBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('pest') || input.includes('disease')) {
-      return 'For pest control, I recommend integrated pest management (IPM). Can you describe the symptoms you\'re seeing? Also, consider using neem oil as a natural pesticide. Would you like me to suggest specific treatments based on your crop type?';
+  const generateBotResponse = async (userInput: string): Promise<string> => {
+    // Call backend FastAPI endpoint which proxies to Groq
+    const res = await fetch(`${API_BASE}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: userInput }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`Backend error ${res.status}: ${text}`);
     }
-    
-    if (input.includes('weather') || input.includes('rain')) {
-      return 'Based on current weather patterns in Kerala, expect moderate rainfall this week. This is good for most crops, but ensure proper drainage for root vegetables. Would you like specific weather recommendations for your crops?';
-    }
-    
-    if (input.includes('fertilizer') || input.includes('nutrition')) {
-      return 'For organic farming, I recommend a balanced NPK ratio. Consider using compost and vermicompost. The specific fertilizer depends on your crop and soil condition. What crops are you growing?';
-    }
-    
-    if (input.includes('tomato')) {
-      return 'Tomatoes need well-drained soil and regular watering. Plant spacing should be 60×45 cm. Watch out for early blight and use copper-based fungicides if needed. Are you growing them in the field or greenhouse?';
-    }
-    
-    if (input.includes('rice') || input.includes('paddy')) {
-      return 'Rice cultivation requires flooding technique. Ensure proper leveling of fields and maintain 2-3 inches of water. Transplant 25-30 day old seedlings. Which variety are you planning to grow?';
-    }
-    
-    return 'I understand your question about farming. As your AI assistant, I can help with crop management, pest control, weather advice, and farming techniques. Could you provide more specific details about your farming challenge?';
+
+    const data = await res.json();
+    return data.reply ?? 'I could not generate a response.';
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -127,7 +148,15 @@ const Chatbot = () => {
                       : 'bg-accent text-accent-foreground'
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  {message.sender === 'bot' ? (
+                    <div className="prose prose-sm prose-invert max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {normalizeToMarkdown(message.content)}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

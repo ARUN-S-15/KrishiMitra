@@ -1,73 +1,148 @@
-# Welcome to your Lovable project
+# KrishiMitra
 
-## Project info
+An AI-powered assistant for Kerala agriculture. The app helps farmers with crop guidance, weather-aware advice, soil and pest management tips, and more. It has:
 
-**URL**: https://lovable.dev/projects/89c21cd7-8295-4dd6-9a0f-1f5d4c68a6a0
+- Frontend: React + Vite + TypeScript + Tailwind (shadcn/ui)
+- Backend: FastAPI proxy to Groq Chat Completions API
 
-## How can I edit this code?
+The chatbot responds in clean, readable Markdown in the UI.
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- Ask farming questions (crops, soil, weather, pest, fertilizer, spacing, etc.)
+- Non‑agricultural queries receive a friendly warning
+- Cleanly rendered Markdown responses (bold sections, bullet points)
+- Local dev via Vite proxy to FastAPI (no CORS issues)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/89c21cd7-8295-4dd6-9a0f-1f5d4c68a6a0) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ and npm
+- Python 3.11+
+- A Groq API key (GROQ_API_KEY)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Optional tools:
+- PowerShell (Windows) for the commands shown here
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## Setup
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 1) Backend (FastAPI)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Location: `Backend/`
 
-# Step 3: Install the necessary dependencies.
-npm i
+Install dependencies (ideally in a virtual environment):
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```powershell
+# In Backend folder
+python -m venv .venv ; venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Environment variables (create a `.env` file in `Backend/`):
+
+```
+# Required
+GROQ_API_KEY=your_groq_api_key_here
+
+# Optional (sensible defaults are used if omitted)
+GROQ_MODEL=llama-3.1-8b-instant
+GROQ_TEMPERATURE=0.3
+GROQ_MAX_TOKENS=512
+
+# CORS controls (for development)
+# Allow comma-separated origins (defaults include http://localhost:8080 etc.)
+ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+# Permit all origins (dev only)
+# ALLOW_ALL_ORIGINS=true
+# Or use regex (example): ^https?://localhost:\\d+$
+# ALLOW_ORIGIN_REGEX=^https?://localhost:\\d+$
+```
+
+Run the backend:
+
+```powershell
+# In Backend folder
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+API endpoints:
+- `GET /` – basic health
+- `POST /chat` – proxy to Groq (body: `{ "message": "your text" }`)
+
+### 2) Frontend (Vite React)
+
+Location: `Frontend/`
+
+Install dependencies:
+
+```powershell
+# In Frontend folder
+npm install
+```
+
+Environment variables:
+
+- For development, the Vite dev server proxies `/api` to the backend at `http://127.0.0.1:8000`. No `.env` is required.
+- To override the backend URL for the proxy:
+
+Create `Frontend/.env` (optional):
+```
+# Only if your backend runs on a non-default URL/port
+VITE_BACKEND_URL=http://127.0.0.1:8000
+```
+
+- To bypass the proxy and call backend directly (e.g., production/staging), set:
+```
+VITE_API_BASE_URL=https://your-backend.example.com
+```
+
+Run the frontend:
+
+```powershell
+# In Frontend folder
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open the URL printed by Vite (default: http://localhost:8080) and navigate to the Chatbot page.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## Development Notes
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- The UI renders bot replies as Markdown using `react-markdown` and `remark-gfm`.
+- The backend blocks non-agricultural queries and returns a friendly warning; agricultural queries are passed to Groq.
+- CORS is flexible via `ALLOWED_ORIGINS`, `ALLOW_ALL_ORIGINS`, or `ALLOW_ORIGIN_REGEX`.
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## Troubleshooting
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- 500 from `/chat`:
+  - Ensure `groq` package is installed (it’s in `requirements.txt`).
+  - Verify `GROQ_API_KEY` is set and valid in the environment where uvicorn runs.
+- CORS issues:
+  - In dev, prefer using the frontend proxy (`/api`). If calling backend directly, make sure backend CORS allows your frontend origin.
+- Frontend can’t reach backend:
+  - Confirm backend is running at `http://127.0.0.1:8000`.
+  - If you changed ports, update `VITE_BACKEND_URL` or `VITE_API_BASE_URL` accordingly.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/89c21cd7-8295-4dd6-9a0f-1f5d4c68a6a0) and click on Share -> Publish.
+## Scripts
 
-## Can I connect a custom domain to my Lovable project?
+- Frontend
+  - `npm run dev` – Start Vite dev server (port 8080)
+  - `npm run build` – Production build
+  - `npm run preview` – Preview production build
 
-Yes, you can!
+- Backend
+  - `uvicorn main:app --reload` – Start FastAPI with auto-reload (default port 8000)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## License
+
+This project is for educational and demonstration purposes.
