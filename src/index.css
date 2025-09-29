@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Krishi Mitra Design System - Green Theme for Kerala Farmers */
+
+@layer base {
+  :root {
+    /* Core green theme - nature-friendly and professional */
+    --background: 0 0% 98%;
+    --foreground: 120 100% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 120 100% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 120 100% 8%;
+
+    /* Primary - Professional Green */
+    --primary: 120 70% 25%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 120 60% 35%;
+    --primary-dark: 120 80% 15%;
+
+    /* Secondary - Yellow accents */
+    --secondary: 45 100% 88%;
+    --secondary-foreground: 45 100% 20%;
+    --secondary-bright: 45 100% 65%;
+
+    /* Accent - Blue highlights */
+    --accent: 210 100% 92%;
+    --accent-foreground: 210 100% 20%;
+    --accent-bright: 210 100% 50%;
+
+    --muted: 120 20% 95%;
+    --muted-foreground: 120 20% 45%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 120 20% 88%;
+    --input: 120 20% 92%;
+    --ring: 120 70% 25%;
+
+    --radius: 0.75rem;
+
+    /* Custom Krishi Mitra tokens */
+    --hero-gradient: linear-gradient(135deg, hsl(120 70% 25%) 0%, hsl(120 60% 35%) 100%);
+    --card-gradient: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(120 20% 98%) 100%);
+    --accent-gradient: linear-gradient(135deg, hsl(45 100% 88%) 0%, hsl(210 100% 92%) 100%);
+    
+    --shadow-soft: 0 4px 20px -4px hsl(120 70% 25% / 0.1);
+    --shadow-card: 0 8px 25px -5px hsl(120 70% 25% / 0.15);
+    --shadow-float: 0 12px 35px -8px hsl(120 70% 25% / 0.2);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 120 20% 8%;
+    --foreground: 0 0% 98%;
+    --card: 120 20% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 120 20% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 120 60% 45%;
+    --primary-foreground: 120 100% 8%;
+    --primary-light: 120 50% 55%;
+    --primary-dark: 120 80% 25%;
+    --secondary: 45 100% 78%;
+    --secondary-foreground: 45 100% 15%;
+    --secondary-bright: 45 100% 55%;
+    --muted: 120 20% 15%;
+    --muted-foreground: 120 10% 65%;
+    --accent: 210 100% 82%;
+    --accent-foreground: 210 100% 15%;
+    --accent-bright: 210 100% 40%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 120 20% 18%;
+    --input: 120 20% 15%;
+    --ring: 120 60% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
