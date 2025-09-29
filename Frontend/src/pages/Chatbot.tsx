@@ -28,7 +28,7 @@ const Chatbot = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   // Prefer '/api' proxy in dev; allow override via VITE_API_BASE_URL for direct calls
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
 
   // Light formatter: ensures headings and list markers render well if Groq returns plain text
   const normalizeToMarkdown = (text: string): string => {
@@ -110,25 +110,25 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl">
       {/* Header */}
-      <div className="text-center mb-6">
-        <div className="bg-hero-gradient rounded-2xl p-6 text-primary-foreground shadow-card">
-          <h1 className="text-3xl font-bold mb-2">Ask Krishi Mitra</h1>
-          <p className="text-primary-foreground/80">
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="bg-hero-gradient rounded-2xl p-4 sm:p-6 text-primary-foreground shadow-card">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Ask Krishi Mitra</h1>
+          <p className="text-xs sm:text-sm text-primary-foreground/80">
             Your AI farming assistant for Kerala agriculture
           </p>
         </div>
       </div>
 
       {/* Chat Container */}
-      <Card className="bg-card-gradient shadow-card h-[600px] flex flex-col">
+  <Card className="bg-card-gradient shadow-card flex flex-col h-[75dvh] md:h-[600px]">
         {/* Messages Area */}
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+  <CardContent className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+              className={`flex items-start gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
             >
               <Avatar className="h-8 w-8 flex-shrink-0">
                 <AvatarFallback className={
@@ -140,25 +140,25 @@ const Chatbot = () => {
                 </AvatarFallback>
               </Avatar>
               
-              <div className={`max-w-[70%] ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+              <div className={`max-w-[80%] sm:max-w-[70%] ${message.sender === 'user' ? 'text-right' : 'text-left'} break-words`}>
                 <div
-                  className={`rounded-2xl px-4 py-3 ${
+                  className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 ${
                     message.sender === 'user'
                       ? 'bg-primary text-primary-foreground ml-auto'
-                      : 'bg-accent text-accent-foreground'
+                      : 'bg-accent text-foreground'
                   }`}
                 >
                   {message.sender === 'bot' ? (
-                    <div className="prose prose-sm prose-invert max-w-none">
+                    <div className="prose prose-xs sm:prose-sm dark:prose-invert max-w-none break-words leading-snug sm:leading-relaxed">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {normalizeToMarkdown(message.content)}
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p className="text-xs sm:text-sm leading-snug sm:leading-relaxed break-words">{message.content}</p>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
@@ -184,8 +184,8 @@ const Chatbot = () => {
         </CardContent>
 
         {/* Input Area */}
-        <div className="border-t border-border p-4">
-          <div className="flex gap-2 mb-3">
+        <div className="border-t border-border p-3 sm:p-4">
+          <div className="hidden sm:flex gap-2 mb-3">
             <Button variant="ghost" size="sm" className="gap-2">
               <Camera className="h-4 w-4" />
               Photo
@@ -200,13 +200,13 @@ const Chatbot = () => {
             </Button>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 min-w-0">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask me anything about farming..."
-              className="flex-1"
+              className="flex-1 min-w-0"
             />
             <Button 
               onClick={handleSendMessage}

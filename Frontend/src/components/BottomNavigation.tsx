@@ -1,4 +1,4 @@
-import { Home, Info, MessageCircle, Settings, Users, Wrench, UserPlus } from "lucide-react";
+import { Home, Info, MessageCircle, Users, Wrench, UserPlus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -8,17 +8,16 @@ const BottomNavigation = () => {
 
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
-    { icon: Info, label: "Information", path: "/information" },
-    { icon: MessageCircle, label: "Ask Krishi Mitra", path: "/chatbot" },
-    { icon: Wrench, label: "Equipments", path: "/equipments" },
+    { icon: Info, label: "Info", path: "/information" },
+    { icon: MessageCircle, label: "Ask", path: "/chatbot" },
+    { icon: Wrench, label: "Tractor", path: "/equipments" },
     { icon: Users, label: "Community", path: "/community" },
-    { icon: UserPlus, label: "Labour / തൊഴിലാളി", path: "/labour" },
-    { icon: Settings, label: "Profile", path: "/profile" },
+    { icon: UserPlus, label: "Labour", path: "/labour" },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-t border-border shadow-float">
-      <div className="grid grid-cols-7 gap-1 px-2 py-2">
+      <div className="grid grid-cols-6 gap-1 px-2 py-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, Plus, ChevronRight, Cloud, TrendingUp, Camera, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, Plus, ChevronRight, Cloud, TrendingUp, Camera, Upload, X, Bell, UserCircle } from "lucide-react";
 import heroImage from "@/assets/kerala-farming-hero.jpg";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,8 @@ interface CropPlan {
     completed: boolean;
     active?: boolean;
     locked?: boolean;
+    photoUrl?: string;
+    suggestion?: string;
   }>;
 }
 
@@ -43,38 +45,57 @@ const Dashboard = () => {
   const [isAddingCrop, setIsAddingCrop] = useState(false);
   const [isAddingCropPlan, setIsAddingCropPlan] = useState(false);
   const navigate = useNavigate();
+  const username = "Farmer";
+
+  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
+  const quotes = [
+    "Our Farming, Our Pride / നമ്മുടെ കൃഷി, നമ്മുടെ അഭിമാനം",
+    "Healthy Soil, Healthy Future / ആരോഗ്യകരമായ മണ്ണ്, ആരോഗ്യകരമായ ഭാവി",
+    "Together We Grow Stronger / ഒരുമിച്ച് വളരാം, ശക്തരാകാം",
+    "Smart Farming for Tomorrow / നാളെയുടെ ബുദ്ധിമാനായ കൃഷി",
+  ];
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % quotes.length);
+    }, 5000);
+    return () => clearInterval(id);
+  }, []);
 
   const searchCards = [
     {
-      title: "Tractor & Equipments",
+      title: "Tractor Info / ട്രാക്ടർ വിവരങ്ങൾ",
       description: "Tractors, drones, harvesters, tillers, sprayers",
       icon: "🚜",
       path: "/equipments",
       color: "bg-primary/10 text-primary"
     },
     {
-      title: "Community",
+      title: "Community / സമൂഹം",
       description: "Connect with fellow farmers, share experiences",
       icon: "👥",
       path: "/community",
       color: "bg-accent-bright/10 text-accent-bright"
     },
     {
-      title: "Government Schemes",
+      title: "Government Schemes (Kerala Farmers) / സർക്കാർ പദ്ധതികൾ (കേരള കർഷകർ)",
       description: "Kerala government schemes and subsidies",
       icon: "🏛️",
       path: "/schemes",
       color: "bg-secondary-bright/10 text-secondary-bright"
     },
     {
-      title: "Weather",
-      description: "Detailed forecast and crop price trends",
+      title: "Weather / കാലാവസ്ഥ",
+      description: "Detailed forecast and crop insights",
       icon: "🌤️",
       path: "/weather",
       color: "bg-accent/10 text-accent-foreground"
     },
     {
-      title: "Soil Health",
+      title: "Soil Health → Satellite-based analysis + Upload Certificate / മണ്ണ് ആരോഗ്യ പരിശോധന → ഉപഗ്രഹ വിശകലനം + സർട്ടിഫിക്കറ്റ് അപ്‌ലോഡ്",
       description: "Soil analysis and treatment suggestions",
       icon: "🌱",
       path: "/soil",
@@ -89,6 +110,7 @@ const Dashboard = () => {
     quantity: "",
     price: "",
     description: "",
+    expectedYield: "",
     photo: null as File | null
   });
 
@@ -135,7 +157,7 @@ const Dashboard = () => {
       name: newCrop.name,
       type: newCrop.type,
       area: newCrop.area,
-      yield: "New",
+      yield: newCrop.expectedYield || "New",
       image: getEmojiForCropType(newCrop.type),
       quantity: newCrop.quantity,
       price: newCrop.price,
@@ -144,7 +166,7 @@ const Dashboard = () => {
     };
 
     setUserCrops([...userCrops, crop]);
-    setNewCrop({ name: "", type: "", area: "", quantity: "", price: "", description: "", photo: null });
+    setNewCrop({ name: "", type: "", area: "", quantity: "", price: "", description: "", expectedYield: "", photo: null });
     setIsAddingCrop(false);
     
     toast({
@@ -223,6 +245,58 @@ const Dashboard = () => {
     });
   };
 
+  const getDayTitle = (day: number) => {
+    switch (day) {
+      case 1: return "Disease Detection / രോഗം കണ്ടെത്തൽ";
+      case 2: return "Pest Type / കീടത്തിന്റെ തരം";
+      case 3: return "Treatment Suggestion / ചികിത്സ നിർദേശം";
+      case 4: return "Progress Check / പുരോഗതി പരിശോധന";
+      case 5: return "Additional Care / അധിക പരിചരണം";
+      case 6: return "Recovery Monitoring / രോഗശാന്തി നിരീക്ഷണം";
+      case 7: return "Final Status / അന്തിമ നില";
+      default: return `Day ${day}`;
+    }
+  };
+
+  const generateSuggestionForDay = (day: number): string => {
+    const map: { [key: number]: string } = {
+      1: "Leaf spots detected. Use organic fungicide. / ഇലകളിൽ പാടുകൾ കണ്ടെത്തി. ഓർഗാനിക് ഫംഗിസൈഡ് ഉപയോഗിക്കുക.",
+      2: "Aphids likely. Consider neem spray. / അഫിഡ്സ് സാധ്യത. വേപ്പിൻ എണ്ണ സ്പ്രേ പരിഗണിക്കുക.",
+      3: "Apply balanced NPK as suggested. / നിർദേശിച്ചതുപോലെ ബാലൻസ്ഡ് NPK നൽകുക.",
+      4: "Growth looks steady. Reduce watering. / വളർച്ച സ്ഥിരം. വെള്ളം കുറയ്ക്കുക.",
+      5: "Mulching recommended. / മൾച്ചിംഗ് ശുപാർശ ചെയ്യുന്നു.",
+      6: "Recovery on track. Monitor pests. / രോഗശാന്തി ശരിയായ രീതിയിൽ. കീടങ്ങൾ നിരീക്ഷിക്കുക.",
+      7: "Ready for harvest planning. / വിളവെടുപ്പ് ആസൂത്രണത്തിന് തയ്യാറാണ്.",
+    };
+    return map[day] || "Keep monitoring. / നിരീക്ഷണം തുടരുക.";
+  };
+
+  const handleOpenDayDialog = (planId: string, day: number) => {
+    setSelectedPlanId(planId);
+    setSelectedDay(day);
+    setIsDayDialogOpen(true);
+  };
+
+  const handleUploadStepPhoto = (file: File) => {
+    if (!selectedPlanId || !selectedDay) return;
+    const photoUrl = URL.createObjectURL(file);
+    const suggestion = generateSuggestionForDay(selectedDay);
+    setCropPlans(prev => prev.map(plan => {
+      if (plan.id !== selectedPlanId) return plan;
+      const updatedSteps = plan.steps.map(step => {
+        if (step.day === selectedDay) {
+          return { ...step, photoUrl, suggestion, completed: true, active: false };
+        } else if (step.day === selectedDay + 1) {
+          return { ...step, active: true, locked: false };
+        }
+        return step;
+      });
+      return { ...plan, steps: updatedSteps };
+    }));
+    toast({ title: "Photo uploaded / ഫോട്ടോ അപ്‌ലോഡ് ചെയ്തു", description: getDayTitle(selectedDay) });
+    setIsDayDialogOpen(false);
+  };
+
   const getEmojiForCropType = (type: string) => {
     const emojiMap: { [key: string]: string } = {
       "Vegetable": "🥬",
@@ -239,6 +313,20 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-8">
+      {/* Header: Welcome + Notifications + Avatar */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">
+          🌱 Welcome, {username} / സ്വാഗതം, {username}
+        </h1>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Bell className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+            <UserCircle className="h-6 w-6" />
+          </Button>
+        </div>
+      </div>
       {/* Welcome Quote */}
       <div className="text-center space-y-4">
         <div className="relative rounded-2xl overflow-hidden shadow-card">
@@ -250,27 +338,25 @@ const Dashboard = () => {
           />
           <div className="absolute inset-0 bg-primary/80" />
           <div className="relative p-8 text-primary-foreground">
-            <h2 className="text-2xl font-bold mb-2">
-              "Our Farming, Our Pride / നമ്മുടെ കൃഷി, നമ്മുടെ അഭിമാനം"
-            </h2>
-            <p className="text-primary-foreground/80 text-lg">
-              "Healthy Soil, Healthy Future / ആരോഗ്യകരമായ മണ്ണ്, ആരോഗ്യകരമായ ഭാവി"
+            <h2 className="text-2xl font-bold mb-2">"{quotes[quoteIndex]}"</h2>
+            <p className="text-primary-foreground/80 text-sm">
+              {/* Rotating bilingual quotes */}
             </p>
-            <p className="text-primary-foreground/70 mt-2">— Together We Grow Stronger / ഒരുമിച്ച് വളരാം, ശക്തരാകാം</p>
           </div>
         </div>
         
         {/* Search Section */}
         <div className="space-y-4">
-          <Button
-            onClick={() => setSearchExpanded(!searchExpanded)}
-            className="w-full max-w-md mx-auto flex items-center gap-3 bg-card border-2 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground shadow-card transition-all duration-300"
-            size="lg"
-          >
-            <Search className="h-5 w-5" />
-            <span className="font-medium">Search Krishi Services / കൃഷി സേവനങ്ങൾ തിരയുക</span>
-          </Button>
-          
+          <div className="max-w-2xl mx-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search services / സേവനങ്ങൾ തിരയുക"
+                className="pl-10"
+                onFocus={() => setSearchExpanded(true)}
+              />
+            </div>
+          </div>
           {searchExpanded && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto animate-slide-up">
               {searchCards.map((card, index) => (
@@ -303,13 +389,30 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-3xl font-bold">28°C</p>
-                <p className="text-muted-foreground">Partly Cloudy</p>
-                <p className="text-sm text-muted-foreground">Humidity: 75% | Wind: 12 km/h</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">2 days ago</p>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">26°C</span>
+                  <span className="text-muted-foreground">Cloudy</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Yesterday</p>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">27°C</span>
+                  <span className="text-muted-foreground">Cloudy</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Today</p>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-primary">28°C</span>
+                  <span className="text-muted-foreground">Partly Cloudy</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Tomorrow</p>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">29°C</span>
+                  <span className="text-muted-foreground">Sunny</span>
+                </div>
               </div>
-              <div className="text-6xl">⛅</div>
+              <div className="text-6xl flex items-center justify-center">⛅</div>
             </div>
           </CardContent>
         </Card>
@@ -333,22 +436,22 @@ const Dashboard = () => {
                   <SelectItem value="pepper">Pepper</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="grid grid-cols-4 gap-2 text-sm">
-                <div className="text-center">
-                  <p className="text-muted-foreground">2 days ago</p>
-                  <p className="font-semibold">₹25/kg</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">2 days ago</span>
+                  <span className="font-semibold">₹25/kg</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-muted-foreground">Yesterday</p>
-                  <p className="font-semibold">₹28/kg</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Yesterday</span>
+                  <span className="font-semibold">₹28/kg</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-muted-foreground">Today</p>
-                  <p className="font-semibold text-primary">₹30/kg</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Today</span>
+                  <span className="font-semibold text-primary">₹30/kg</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-muted-foreground">Tomorrow</p>
-                  <p className="font-semibold text-secondary-bright">₹32/kg</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Tomorrow</span>
+                  <span className="font-semibold text-secondary-bright">₹32/kg</span>
                 </div>
               </div>
             </div>
@@ -359,13 +462,13 @@ const Dashboard = () => {
       {/* Your Crops */}
       <Card className="bg-card-gradient shadow-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>നിങ്ങളുടെ വിള / Your Crops</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle>Your Crops / നിങ്ങളുടെ വിള</CardTitle>
             <Dialog open={isAddingCrop} onOpenChange={setIsAddingCrop}>
               <DialogTrigger asChild>
-                <Button size="sm" className="bg-primary hover:bg-primary-dark shadow-soft">
+                <Button size="sm" className="bg-primary hover:bg-primary-dark shadow-soft w-full sm:w-auto text-xs sm:text-sm !whitespace-normal">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Crop / വിള ചേർക്കുക
+                  Add Crop <span className="hidden sm:inline"> / വിള ചേർക്കുക</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
@@ -401,12 +504,21 @@ const Dashboard = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="cropArea">Area / സ്ഥലം *</Label>
+                    <Label htmlFor="cropArea">Quantity / Area / അളവ് / വിസ്തൃതി *</Label>
                     <Input
                       id="cropArea"
                       value={newCrop.area}
                       onChange={(e) => setNewCrop({...newCrop, area: e.target.value})}
-                      placeholder="e.g., 2 acres / ഉദാ: 2 ഏക്കർ"
+                      placeholder="e.g., 500 kg or 2 acres / ഉദാ: 500 കിലോ അല്ലെങ്കിൽ 2 ഏക്കർ"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expectedYield">Expected Yield / പ്രതീക്ഷിക്കുന്ന വിളവ്</Label>
+                    <Input
+                      id="expectedYield"
+                      value={newCrop.expectedYield}
+                      onChange={(e) => setNewCrop({...newCrop, expectedYield: e.target.value})}
+                      placeholder="e.g., 600 kg / ഉദാ: 600 കിലോ"
                     />
                   </div>
                   <div>
@@ -438,7 +550,7 @@ const Dashboard = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="cropPhoto">Photo / ഫോട്ടോ</Label>
+                    <Label htmlFor="cropPhoto">Upload Crop Photo / വിളയുടെ ഫോട്ടോ അപ്‌ലോഡ്</Label>
                     <div className="flex items-center gap-2">
                       <Input
                         id="cropPhoto"
@@ -496,12 +608,12 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* 7-Day Crop Planning */}
+      {/* 7-Day Crop Care */}
       <Card className="bg-card-gradient shadow-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <CardTitle>ഏഴ് ദിവസത്തെ വിള പദ്ധതിയിടൽ / 7-Day Crop Planning</CardTitle>
+              <CardTitle>7-Day Crop Care / 7-ദിവസ വിള പരിപാലനം</CardTitle>
               <p className="text-muted-foreground">നിത്യ കൃത്യങ്ങൾ പൂർത്തിയാക്കി അടുത്ത ഘട്ടം അൺലോക്ക് ചെയ്യുക / Complete daily tasks to unlock the next step</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Multiple crops supported / ഒന്നിലധികം വിളകൾ പിന്തുണയ്ക്കുന്നു
@@ -509,9 +621,9 @@ const Dashboard = () => {
             </div>
             <Dialog open={isAddingCropPlan} onOpenChange={setIsAddingCropPlan}>
               <DialogTrigger asChild>
-                <Button size="sm" className="bg-secondary-bright hover:bg-secondary-bright/80 shadow-soft">
+                <Button size="sm" className="bg-secondary-bright hover:bg-secondary-bright/80 shadow-soft w-full sm:w-auto text-xs sm:text-sm !whitespace-normal">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Plan / പ്ലാൻ ചേർക്കുക
+                  Add Plan <span className="hidden sm:inline"> / പ്ലാൻ ചേർക്കുക</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
@@ -591,7 +703,7 @@ const Dashboard = () => {
                           : "bg-card"
                       }`}
                     >
-                      <CardContent className="p-4 text-center">
+                      <CardContent className="p-4 text-center cursor-pointer" onClick={() => handleOpenDayDialog(plan.id, step.day)}>
                         <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 rounded-full bg-background shadow-soft">
                           {step.completed ? (
                             <span className="text-2xl">✅</span>
@@ -604,14 +716,22 @@ const Dashboard = () => {
                           )}
                         </div>
                         <h4 className="font-semibold text-sm mb-1">Day {step.day}</h4>
-                        <p className="text-xs text-muted-foreground">{step.task}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {step.day === 1 && "Disease Detection / രോഗം കണ്ടെത്തൽ"}
+                          {step.day === 2 && "Pest Type / കീടത്തിന്റെ തരം"}
+                          {step.day === 3 && "Treatment Suggestion / ചികിത്സ നിർദേശം"}
+                          {step.day === 4 && "Progress Check / പുരോഗതി പരിശോധന"}
+                          {step.day === 5 && "Additional Care / അധിക പരിചരണം"}
+                          {step.day === 6 && "Recovery Monitoring / രോഗശാന്തി നിരീക്ഷണം"}
+                          {step.day === 7 && "Final Status / അന്തിമ നില"}
+                        </p>
                         {step.active && (
                           <Button 
                             size="sm" 
                             className="mt-3 bg-secondary-bright hover:bg-secondary-bright/80"
-                            onClick={() => handleStepComplete(plan.id, step.day)}
+                            onClick={() => handleOpenDayDialog(plan.id, step.day)}
                           >
-                            Complete Task / ടാസ്ക് പൂർത്തിയാക്കുക
+                            Upload Photo / ഫോട്ടോ അപ്‌ലോഡ്
                           </Button>
                         )}
                       </CardContent>
@@ -624,6 +744,55 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDayDialogOpen} onOpenChange={setIsDayDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedDay ? getDayTitle(selectedDay) : "Day Detail"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedPlanId && selectedDay && (() => {
+              const plan = cropPlans.find(p => p.id === selectedPlanId)!;
+              const step = plan.steps.find(s => s.day === selectedDay)!;
+              const isFutureLocked = !!step.locked;
+              const isActiveToday = !!step.active && !step.completed;
+              const hasData = !!step.photoUrl || !!step.suggestion;
+              return (
+                <div className="space-y-4">
+                  {hasData && (
+                    <div className="space-y-2">
+                      {step.photoUrl && (
+                        <img src={step.photoUrl} alt="Uploaded" className="w-full h-48 object-cover rounded-md" />
+                      )}
+                      {step.suggestion && (
+                        <p className="text-sm">{step.suggestion}</p>
+                      )}
+                    </div>
+                  )}
+                  {isFutureLocked && (
+                    <p className="text-sm text-muted-foreground">Locked until previous steps complete / മുൻ ഘട്ടങ്ങൾ പൂർത്തിയാകുന്നത് വരെ ലോക്ക്ഡ്</p>
+                  )}
+                  {isActiveToday && (
+                    <div className="space-y-2">
+                      <Label htmlFor="dayPhoto">Upload Photo / ഫോട്ടോ അപ്‌ലോഡ്</Label>
+                      <Input id="dayPhoto" type="file" accept="image/*" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleUploadStepPhoto(file);
+                        }
+                      }} />
+                      <p className="text-xs text-muted-foreground">After upload, suggestion will be shown and next day unlocks / അപ്‌ലോഡ് കഴിഞ്ഞ് നിർദേശം കാണിക്കും, അടുത്ത ദിവസം അൺലോക്ക് ചെയ്യും</p>
+                    </div>
+                  )}
+                  {!isActiveToday && !hasData && !isFutureLocked && (
+                    <p className="text-sm text-muted-foreground">No data yet / ഡാറ്റയില്ല</p>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

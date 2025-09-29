@@ -54,7 +54,7 @@ async def read_root():
     return {"message": "Krishi Mitra backend is running"}
 
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(payload: ChatRequest):
     """
     Call Groq LLM with the user's message and return the assistant's reply.
